@@ -6,4 +6,8 @@ function drawScreen() {
 	//렌더링 컨텍스트 : 2d, 3d
 	Context.fillStyle = "#000000";
 	Context.fillRect(0, 0, 1000, 700);
+
+	Context.fillStyle = "#000000";
+	Context.fillRect(0, 0, 500, 700);
+
 }
