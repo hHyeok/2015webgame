@@ -100,7 +100,30 @@ function MoveBall()
 	tempBall3.y += tempBall3.go_y * 5;
 	tempBall4.x += tempBall4.go_x * 5;
 	tempBall4.y += tempBall4.go_y * 5;
-	console.log(tempBall1.x);
+
+	if(tempBall1.y >= 680)
+	{
+		tempBall1.x = 0;
+		tempBall1.y = 0;
+	}
+	if(tempBall2.y >= 680)
+	{
+		tempBall2.x = 980;
+		tempBall2.y = 0;
+	}
+	console.log(tempBall3.y);
+	if(tempBall3.y < 0)
+	{
+		tempBall3.x = 980;
+		tempBall3.y = 680;
+	}
+	if(tempBall4.y < 0)
+	{
+		tempBall4.x = 0;
+		tempBall4.y = 680;
+	}
+		
+
 	drawScreen();
 }
 
