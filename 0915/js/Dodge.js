@@ -1,7 +1,4 @@
-﻿window.addEventListener("load", drawScreen, false);
-window.addEventListener("mousemove", onMouseMove, false);
-window.addEventListener("mousedown", onMouseDown, false);
-window.addEventListener("mouseup", onMouseUp, false);
+window.addEventListener("load", drawScreen, false);
 window.addEventListener("keydown", onkeydown, false);
 
 var imgBackground = new Image();
@@ -21,26 +18,22 @@ var S_OVER = 2;
 
 var GameState = S_READY;
 
-var bMouseClicked = false;
-var intMouseX = 480;
-var intMouseY = 300;
+
+var intPlayerX = 480;
+var intPlayerY = 300;
 var PosX = 480;
 var PosY = 300;
-var strMouseStatus = "준비중";
 
 var intervalID;
 
-var tempBall1 = { x: 0, y: 0, go_x: 1, go_y: 1};
-var tempBall2 = { x: 980, y: 0, go_x: -1, go_y: 1};
-var tempBall3 = { x: 980, y: 680, go_x: -1, go_y: -1};
-var tempBall4 = { x: 0, y: 680, go_x: 1, go_y: -1};
+var arrBalls = new Array();
 
 t = setInterval(update, 1000/30);
 
 function update()
 {
-	if(PosX != intMouseX) intMouseX += (PosX - intMouseX) / 10;
-	if(PosY != intMouseY) intMouseY += (PosY - intMouseY) / 10;
+	if(PosX != intPlayerX) intPlayerX += (PosX - intPlayerX) / 20;
+	if(PosY != intPlayerY) intPlayerY += (PosY - intPlayerY) / 20;
 	
 	if(intervalID == true) MoveBall();
 
@@ -52,11 +45,11 @@ function drawScreen() {
 	var Context = theCanvas.getContext("2d");
 	Context.drawImage(imgBackground, 0, 0, 1000, 700);
 	Context.fillStyle="#ff0";
-	Context.drawImage(imgPlayer, intMouseX, intMouseY, 100, 100);
-	Context.drawImage(ball, tempBall1.x, tempBall1.y, 15, 15);
-	Context.drawImage(ball, tempBall2.x, tempBall2.y, 15, 15);
-	Context.drawImage(ball, tempBall3.x, tempBall3.y, 15, 15);
-	Context.drawImage(ball, tempBall4.x, tempBall4.y, 15, 15);
+	Context.drawImage(imgPlayer, intPlayerX, intPlayerY, 100, 100);
+	for(var i = 0; i < arrBalls.length; i++)
+	{
+		Context.drawImage(ball, arrBalls[i].x, arrBalls[i].y, 15, 15);
+	}
 	Context.fillStyle = "#ff0";
 	Context.font = '24px Arial';
 	Context.textBaseline = "top";
@@ -69,88 +62,147 @@ function onkeydown(e)
 {
 	if(e.keyCode == 13 && (GameState == S_READY || GameState == S_OVER))
 	{
-		GameState = S_GAME;
+		onReady();
 		onGameStart();
 	}
 	if(GameState == S_GAME)
 	{
 		switch(e.keyCode)
 		{
-			case 37 : if(intMouseX > 0) PosX -= 10; break;
-			case 39 : if(intMouseX < 910) PosX += 10; break;
-			case 38 : if(intMouseY > 0) PosY -= 10; break;
-			case 40 : if(intMouseY < 570) PosY += 10; break;
+			case 37 : if(intPlayerX > 0) PosX -= 20; break;
+			case 39 : if(intPlayerX < 910) PosX += 20; break;
+			case 38 : if(intPlayerY > 0) PosY -= 20; break;
+			case 40 : if(intPlayerY < 570) PosY += 20; break;
 		}
 	}
 	//drawScreen();
 }
 
-function onGameStart()
+function RandomNextInt(n)
 {
-	intervalID = true;
+	return 1 + Math.floor(Math.random() * n);
+}
+
+function chkCollision(x,y) 
+{
+	if(intPlayerX + 75 > x + 5 &&
+	   intPlayerX + 35 < x + 25 &&
+	   intPlayerY + 35 < y + 25 &&
+	   intPlayerY + 90 > y + 5)
+	{
+		return true;
+	}
+	return false;
 }
 
 function MoveBall()
 {
-	tempBall1.x += tempBall1.go_x * 5;
-	tempBall1.y += tempBall1.go_y * 5;
-	tempBall2.x += tempBall2.go_x * 5;
-	tempBall2.y += tempBall2.go_y * 5;
-	tempBall3.x += tempBall3.go_x * 5;
-	tempBall3.y += tempBall3.go_y * 5;
-	tempBall4.x += tempBall4.go_x * 5;
-	tempBall4.y += tempBall4.go_y * 5;
 
-	if(tempBall1.y >= 680)
+	for(var i = 0; i < arrBalls.length; i++)
 	{
-		tempBall1.x = 0;
-		tempBall1.y = 0;
-	}
-	if(tempBall2.y >= 680)
-	{
-		tempBall2.x = 980;
-		tempBall2.y = 0;
-	}
-	console.log(tempBall3.y);
-	if(tempBall3.y < 0)
-	{
-		tempBall3.x = 980;
-		tempBall3.y = 680;
-	}
-	if(tempBall4.y < 0)
-	{
-		tempBall4.x = 0;
-		tempBall4.y = 680;
-	}
+		if(arrBalls[i].y >= 680 || arrBalls[i].y <= 0 || 
+		   arrBalls[i].x <= 0 || arrBalls[i].x >= 980) 
+		{
+			var BallType = RandomNextInt(4);
+			switch(BallType)
+			{
+				case 1:
+					arrBalls[i].x = 0;
+					arrBalls[i].y = RandomNextInt(680);
+					arrBalls[i].go_x = RandomNextInt(2);
+					arrBalls[i].go_y = -2 + RandomNextInt(4);
+					break;
+				case 2:
+					arrBalls[i].x = 980;
+					arrBalls[i].y = RandomNextInt(680);
+					arrBalls[i].go_x = -1 * RandomNextInt(2);
+					arrBalls[i].go_y = -2 + RandomNextInt(4);
+					break;
+				case 3:
+					arrBalls[i].y = 0;
+					arrBalls[i].x = RandomNextInt(980);
+					arrBalls[i].go_y = RandomNextInt(2);
+					arrBalls[i].go_x = -2 + RandomNextInt(4);
+					break;
+				case 4:
+					arrBalls[i].y = 680;
+					arrBalls[i].x = RandomNextInt(980);
+					arrBalls[i].go_y = -1 * RandomNextInt(2);
+					arrBalls[i].go_x = -2 + RandomNextInt(4);
+			}
+		}
+		arrBalls[i].x += arrBalls[i].go_x * 5;
+		arrBalls[i].y += arrBalls[i].go_y * 5;
+		if( chkCollision(arrBalls[i].x, arrBalls[i].y) ) onGameOver();
 		
-
-	drawScreen();
-}
-
-function onMouseDown(e) {
-	strMouseStatus = "클릭 !";
-	var theCanvas = document.getElementById("GameCanvas");
-	bMouseClicked = true;
-	intMouseX = e.clientX - theCanvas.offsetLeft-42;
-	intMouseY = e.clientY - theCanvas.offsetTop-50;
-	drawScreen();
-}
-
-function onMouseMove(e) {
-	strMouseStatus = "Moving now";
-	if(bMouseClicked) {
-		var theCanvas = document.getElementById("GameCanvas");
-		intMouseX = e.clientX - theCanvas.offsetLeft-42;
-		intMouseY = e.clientY - theCanvas.offsetTop-50;
-		drawScreen();
 	}
-}
 
-function onMouseUp(e) {
-	strMouseStatus = "클릭 끝!";
-	bMouseClicked = false;
-	intMouseX = 480;
-	intMouseY = 300;
 	drawScreen();
 }
+
+function onReady()
+{
+	GameState = S_READY;
+	intPlayerX = 480;
+	intPlayerY = 300;
+	PosX = 480;
+	PosY = 300;
+}
+
+function onGameStart()
+{
+	GameState = S_GAME;
+	intervalID = setInterval(MoveBall, 100);
+	t = setInterval(update, 1000/60);
+	aB = setInterval(addBall, 800); //총알을 추가하는 타이머 800을 조정하여 딜레이수정
+
+	arrBalls.push({x:0, y:0, go_x:1, go_y:1});
+	arrBalls.push({x:980, y:0, go_x:-1, go_y:1});
+	arrBalls.push({x:980, y:680, go_x:-1, go_y:-1});
+	arrBalls.push({x:0, y:680, go_x:1, go_y:-1}); //기본으로 4개총알 생성
+}
+
+function addBall()
+{
+	var BallType = RandomNextInt(4);
+	var intX, intY, intGoX, intGoY;
+	var BallType = RandomNextInt(4);
+	switch(BallType)
+	{
+		case 1:
+			intX = 0;
+			intY = RandomNextInt(680);
+			intGoX = RandomNextInt(2);
+			intGoY = -2 + RandomNextInt(4);
+			break;
+		case 2:
+			intX = 980;
+			intY = RandomNextInt(680);
+			intGoX = -1 * RandomNextInt(2);
+			intGoY = -2 + RandomNextInt(4);
+			break;
+		case 3:
+			intY = 0;
+			intX = RandomNextInt(980);
+			intGoY = RandomNextInt(2);
+			intGoX = -2 + RandomNextInt(4);
+			break;
+		case 4:
+			intY = 680;
+			intX = RandomNextInt(980);
+			intGoY = -1 * RandomNextInt(2);
+			intGoX = -2 + RandomNextInt(4);
+	}
+	arrBalls.push({x:intX, y:intY, go_x:intGoX, go_y:intGoY});
+}
+
+function onGameOver()
+{
+	GameState = S_OVER;
+	while(arrBalls.length != 0) arrBalls.pop();
+	clearInterval(intervalID);
+	clearInterval(t);
+	clearInterval(aB);
+}
+
 
