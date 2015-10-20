@@ -1,5 +1,6 @@
 window.addEventListener("load", drawScreen, false);
 window.addEventListener("keydown", onkeydown, false);
+window.addEventListener("keyup", onkeyup, false);
 
 var imgBackground = new Image();
 imgBackground.src = "../image/background.png";
@@ -17,7 +18,9 @@ var S_GAME = 1;
 var S_OVER = 2;
 
 var GameState = S_READY;
+var isKeyDown = [];
 
+var score = 0;
 
 var intPlayerX = 480;
 var intPlayerY = 300;
@@ -32,10 +35,26 @@ t = setInterval(update, 1000/30);
 
 function update()
 {
-	if(PosX != intPlayerX) intPlayerX += (PosX - intPlayerX) / 20;
-	if(PosY != intPlayerY) intPlayerY += (PosY - intPlayerY) / 20;
+	if(GameState == S_GAME)
+	{
+  		if(isKeyDown[37]){ 
+		    if(intPlayerX > 0) PosX -= 5;
+		}
+		if(isKeyDown[39]){ 
+		    if(intPlayerX < 910) PosX += 5;
+		}
+		if(isKeyDown[38]){ 
+		    if(intPlayerY > 0) PosY -= 5;
+  		}
+  		if(isKeyDown[40]){ 
+   			if(intPlayerY < 570) PosY += 5;
+  		}
+	}
+	if(PosX != intPlayerX && (intPlayerX > 0 || intPlayerX < 910) ) intPlayerX += (PosX - intPlayerX) / 20;
+	if(PosY != intPlayerY && (intPlayerY > 0 || intPlayerY < 570)) intPlayerY += (PosY - intPlayerY) / 20;
 	
 	if(intervalID == true) MoveBall();
+	score+=1;
 
 	drawScreen();
 }
@@ -43,18 +62,22 @@ function update()
 function drawScreen() {
 	var theCanvas = document.getElementById("GameCanvas");
 	var Context = theCanvas.getContext("2d");
-	Context.drawImage(imgBackground, 0, 0, 1000, 700);
+	Context.drawImage(imgBackground, 0, 0, 1020, 780);
 	Context.fillStyle="#ff0";
 	Context.drawImage(imgPlayer, intPlayerX, intPlayerY, 100, 100);
 	for(var i = 0; i < arrBalls.length; i++)
 	{
 		Context.drawImage(ball, arrBalls[i].x, arrBalls[i].y, 15, 15);
 	}
-	Context.fillStyle = "#ff0";
+	Context.fillStyle = "#000";
 	Context.font = '24px Arial';
 	Context.textBaseline = "top";
 	if( GameState == S_READY) Context.fillText("READY!", 470, 250);
-	else if ( GameState == S_GAME) Context.fillText("GO!", 300, 200);
+	else if ( GameState == S_GAME)
+	{
+		Context.fillText("GO!", 300, 200);
+		Context.fillText("점수 : " + score, 0, 0);
+	}
 	else if ( GameState == S_OVER) Context.fillText("GAME OVER", 400, 300);
 }
 
@@ -65,17 +88,16 @@ function onkeydown(e)
 		onReady();
 		onGameStart();
 	}
-	if(GameState == S_GAME)
+	else
 	{
-		switch(e.keyCode)
-		{
-			case 37 : if(intPlayerX > 0) PosX -= 20; break;
-			case 39 : if(intPlayerX < 910) PosX += 20; break;
-			case 38 : if(intPlayerY > 0) PosY -= 20; break;
-			case 40 : if(intPlayerY < 570) PosY += 20; break;
-		}
+		if(GameState == S_GAME) isKeyDown[e.keyCode] = true;
 	}
 	//drawScreen();
+}
+
+function onkeyup(e)
+{
+	isKeyDown[e.keyCode] = false;
 }
 
 function RandomNextInt(n)
@@ -90,6 +112,9 @@ function chkCollision(x,y)
 	   intPlayerY + 35 < y + 25 &&
 	   intPlayerY + 90 > y + 5)
 	{
+		soundBack.pause();
+		soundOver.play();
+		score = 0;
 		return true;
 	}
 	return false;
@@ -100,33 +125,33 @@ function MoveBall()
 
 	for(var i = 0; i < arrBalls.length; i++)
 	{
-		if(arrBalls[i].y >= 680 || arrBalls[i].y <= 0 || 
-		   arrBalls[i].x <= 0 || arrBalls[i].x >= 980) 
+		if(arrBalls[i].y >= 760 || arrBalls[i].y <= 0 || 
+		   arrBalls[i].x <= 0 || arrBalls[i].x >= 1000) 
 		{
 			var BallType = RandomNextInt(4);
 			switch(BallType)
 			{
 				case 1:
 					arrBalls[i].x = 0;
-					arrBalls[i].y = RandomNextInt(680);
+					arrBalls[i].y = RandomNextInt(760);
 					arrBalls[i].go_x = RandomNextInt(2);
 					arrBalls[i].go_y = -2 + RandomNextInt(4);
 					break;
 				case 2:
-					arrBalls[i].x = 980;
-					arrBalls[i].y = RandomNextInt(680);
+					arrBalls[i].x = 1000;
+					arrBalls[i].y = RandomNextInt(760);
 					arrBalls[i].go_x = -1 * RandomNextInt(2);
 					arrBalls[i].go_y = -2 + RandomNextInt(4);
 					break;
 				case 3:
 					arrBalls[i].y = 0;
-					arrBalls[i].x = RandomNextInt(980);
+					arrBalls[i].x = RandomNextInt(1000);
 					arrBalls[i].go_y = RandomNextInt(2);
 					arrBalls[i].go_x = -2 + RandomNextInt(4);
 					break;
 				case 4:
-					arrBalls[i].y = 680;
-					arrBalls[i].x = RandomNextInt(980);
+					arrBalls[i].y = 760;
+					arrBalls[i].x = RandomNextInt(1000);
 					arrBalls[i].go_y = -1 * RandomNextInt(2);
 					arrBalls[i].go_x = -2 + RandomNextInt(4);
 			}
@@ -151,6 +176,17 @@ function onReady()
 
 function onGameStart()
 {
+	soundBack = new Audio();
+	soundBack.src = "../image/back.mp3"
+	soundBack.loop = true;
+	document.body.appendChild(soundBack);
+
+	soundOver = new Audio();
+	soundOver.src = "../image/gameover.mp3"
+	document.body.appendChild(soundOver);
+
+	soundBack.play();
+
 	GameState = S_GAME;
 	intervalID = setInterval(MoveBall, 100);
 	t = setInterval(update, 1000/60);
